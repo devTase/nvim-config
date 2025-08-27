@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# Neovim temporary files
+*.swp
+*.swo
+*.swx
+*~
+Session.vim
+.netrwhist
+.tags
+TAGS
+tags
+
+# If you keep temp dirs inside config
+backup/
+swap/
+undo/
+
+# Logs
+log/
+logs/
+*.log
+
+# Lua bytecode
+*.luac
+
