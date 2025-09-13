@@ -15,4 +15,3 @@ vim.fn.sign_define("NvimTreeDiagnosticErrorIcon", {text = "", texthl = "Diagnost
 vim.fn.sign_define("NvimTreeDiagnosticWarnIcon", {text = "", texthl = "DiagnosticWarn"})
 vim.fn.sign_define("NvimTreeDiagnosticInfoIcon", {text = "", texthl = "DiagnosticInfo"})
 vim.fn.sign_define("NvimTreeDiagnosticHintIcon", {text = "", texthl = "DiagnosticHint"})
-

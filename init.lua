@@ -41,152 +41,7 @@ vim.opt.rtp:prepend(lazypath)
 
 -- Plugin configuration
 require("lazy").setup({
-  -- LSP Configuration & Plugins
-  {
-    'neovim/nvim-lspconfig',
-    dependencies = {
-      'williamboman/mason.nvim',
-      'williamboman/mason-lspconfig.nvim',
-      'hrsh7th/cmp-nvim-lsp',
-    },
-  },
-
-  -- Java specific
-  {
-    'mfussenegger/nvim-jdtls',
-  },
-
-  -- Autocompletion
-  {
-    'hrsh7th/nvim-cmp',
-    dependencies = {
-      'hrsh7th/cmp-nvim-lsp',
-      'hrsh7th/cmp-buffer',
-      'hrsh7th/cmp-path',
-      'hrsh7th/cmp-cmdline',
-      'L3MON4D3/LuaSnip',
-      'saadparwaiz1/cmp_luasnip',
-    },
-  },
-
-  -- GitHub Copilot (core)
-  {
-    'zbirenbaum/copilot.lua',
-    cmd = 'Copilot',
-    build = ':Copilot auth',
-    opts = {
-      suggestion = { enabled = true },
-      panel = { enabled = true },
-    },
-  },
-  -- Copilot source for nvim-cmp
-  {
-    'zbirenbaum/copilot-cmp',
-    dependencies = { 'zbirenbaum/copilot.lua' },
-    config = function()
-      require('copilot_cmp').setup()
-    end,
-  },
-
-  -- File explorer
-  {
-    'nvim-tree/nvim-tree.lua',
-    dependencies = {
-      'nvim-tree/nvim-web-devicons',
-    },
-  },
-
-  -- LSP file operations (renames/moves via file explorer propagate through LSP)
-  {
-    'antosha417/nvim-lsp-file-operations',
-    dependencies = { 'nvim-lua/plenary.nvim', 'nvim-tree/nvim-tree.lua' },
-    config = function()
-      require('lsp-file-operations').setup()
-    end,
-  },
-
-  -- Fuzzy finder
-  {
-    'nvim-telescope/telescope.nvim',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-    },
-  },
-
-  -- Syntax highlighting
-  {
-    'nvim-treesitter/nvim-treesitter',
-    build = ':TSUpdate',
-  },
-
-  -- Git integration
-  {
-    'tpope/vim-fugitive',
-  },
-  {
-    'lewis6991/gitsigns.nvim',
-  },
-
-  -- Status line
-  {
-    'nvim-lualine/lualine.nvim',
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
-  },
-
-  -- Color scheme
-  {
-    "sainnhe/everforest",
-    priority = 1000,  -- load first
-  },
-
-  -- Harpoon for file navigation
-  {
-    'ThePrimeagen/harpoon',
-    branch = "harpoon2",
-    dependencies = { "nvim-lua/plenary.nvim" },
-  },
-
-  -- Comment plugin
-  {
-    'numToStr/Comment.nvim',
-    config = function()
-      require('Comment').setup()
-    end,
-  },
-
-  -- Auto pairs
-  {
-    'windwp/nvim-autopairs',
-    config = function()
-      require('nvim-autopairs').setup({})
-    end,
-  },
-
-  -- Indent guides
-  {
-    'lukas-reineke/indent-blankline.nvim',
-    main = "ibl",
-    opts = {},
-  },
-
-  -- Tmux integration
-  {
-    'christoomey/vim-tmux-navigator',
-    cmd = {
-      'TmuxNavigateLeft',
-      'TmuxNavigateDown',
-      'TmuxNavigateUp',
-      'TmuxNavigateRight',
-      'TmuxNavigatePrevious',
-    },
-    keys = {
-      { '<c-h>', '<cmd><C-U>TmuxNavigateLeft<cr>' },
-      { '<c-j>', '<cmd><C-U>TmuxNavigateDown<cr>' },
-      { '<c-k>', '<cmd><C-U>TmuxNavigateUp<cr>' },
-      { '<c-l>', '<cmd><C-U>TmuxNavigateRight<cr>' },
-      { '<c-\\>', '<cmd><C-U>TmuxNavigatePrevious<cr>' },
-    },
-  },
+  { import = "plugins" },
 })
 
 require('theme')
@@ -209,6 +64,7 @@ require('mason-lspconfig').setup({
 -- LSP configuration
 local lspconfig = require('lspconfig')
 local cmp_nvim_lsp = require('cmp_nvim_lsp')
+require('lsp.handlers').setup()
 
 -- Add additional capabilities supported by nvim-cmp
 local capabilities = cmp_nvim_lsp.default_capabilities()
@@ -366,22 +222,6 @@ keymap("n", "<leader>4", function() harpoon:list():select(4) end, { desc = 'Harp
 keymap("n", "<C-S-P>", function() harpoon:list():prev() end, { desc = 'Harpoon previous' })
 keymap("n", "<C-S-N>", function() harpoon:list():next() end, { desc = 'Harpoon next' })
 
--- Lualine setup
-require('lualine').setup({
-  options = {
-    theme = 'everforest',
-    component_separators = { left = '', right = ''},
-    section_separators = { left = '', right = ''},
-  },
-  sections = {
-    lualine_a = {'mode'},
-    lualine_b = {'branch', 'diff', 'diagnostics'},
-    lualine_c = {'filename'},
-    lualine_x = {'encoding', 'fileformat', 'filetype'},
-    lualine_y = {'progress'},
-    lualine_z = {'location'}
-  },
-})
 
 -- Gitsigns setup
 require('gitsigns').setup()
@@ -405,6 +245,59 @@ local function is_normal_writable(bufnr)
   local name = vim.api.nvim_buf_get_name(bufnr)
   if not name or name == '' then return false end
   return true
+end
+
+-- Maven test helpers
+local last_test_cmd = nil
+local last_test_win = nil
+
+local function project_root()
+  local cwd = vim.fn.getcwd()
+  local res = vim.fn.systemlist({ 'git', 'rev-parse', '--show-toplevel' })
+  if vim.v.shell_error == 0 and #res > 0 and res[1] ~= '' then
+    return res[1]
+  end
+  return cwd
+end
+
+local function run_mvn(args)
+  local root = project_root()
+  -- open a bottom split terminal and run the command in project root
+  vim.cmd('botright split')
+  vim.cmd('resize 15')
+  local win = vim.api.nvim_get_current_win()
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_win_set_buf(win, buf)
+  -- Verbose Maven output with colors; enable dynamic agent loading to hide ByteBuddy warning
+  local cmd = 'MAVEN_OPTS="-XX:+EnableDynamicAgentLoading" mvn -Dstyle.color=always -DtrimStackTrace=false ' .. args
+  last_test_cmd = cmd
+  last_test_win = win
+  vim.fn.termopen({ 'bash', '-lc', cmd }, { cwd = root })
+  vim.cmd('startinsert')
+end
+
+local function current_test_class()
+  return vim.fn.expand('%:t:r')
+end
+
+local function current_test_method()
+  local cursor = vim.api.nvim_win_get_cursor(0)[1]
+  for lnum = cursor, math.max(1, cursor - 200), -1 do
+    local line = vim.api.nvim_buf_get_lines(0, lnum - 1, lnum, false)[1] or ''
+    -- common JUnit method patterns
+    local name = line:match('void%s+([%w_]+)%s*%(')
+    if not name then
+      name = line:match('public%s+[%w_<>%[%]]+%s+([%w_]+)%s*%(')
+    end
+    if not name then
+      name = line:match('([%w_]+)%s*%(')
+      if name and (name == 'if' or name == 'for' or name == 'while' or name == 'switch' or name == 'catch' or name == 'return') then
+        name = nil
+      end
+    end
+    if name then return name end
+  end
+  return nil
 end
 
 -- Key mappings
@@ -453,6 +346,72 @@ end, { desc = 'NvimTree: auto-fit width to content' })
 
 -- Telescope
 keymap('n', '<leader>ff', '<cmd>Telescope find_files<cr>', { desc = 'Find files' })
+
+-- Maven tests
+keymap('n', '<leader>tt', function()
+  run_mvn('test')
+end, { desc = 'Maven: test all' })
+
+keymap('n', '<leader>tc', function()
+  local cls = current_test_class()
+  if cls == nil or cls == '' then
+    vim.notify('Cannot detect test class from filename', vim.log.levels.WARN)
+    return
+  end
+  run_mvn('-Dtest=' .. cls .. ' test')
+end, { desc = 'Maven: test current class' })
+
+keymap('n', '<leader>tm', function()
+  local cls = current_test_class()
+  local m = current_test_method()
+  if not cls or cls == '' then
+    vim.notify('Cannot detect test class from filename', vim.log.levels.WARN)
+    return
+  end
+  if not m or m == '' then
+    vim.notify('Cannot detect test method under cursor', vim.log.levels.WARN)
+    return
+  end
+  run_mvn('-Dtest=' .. cls .. '#' .. m .. ' test')
+end, { desc = 'Maven: test method under cursor' })
+
+keymap('n', '<leader>tv', function()
+  run_mvn('verify')
+end, { desc = 'Maven: verify (unit+integration)' })
+
+-- Repeat last test command
+keymap('n', '<leader>tr', function()
+  if not last_test_cmd or last_test_cmd == '' then
+    vim.notify('No previous test command to repeat', vim.log.levels.INFO)
+    return
+  end
+  -- Re-run using the exact last command string
+  local root = project_root()
+  vim.cmd('botright split')
+  vim.cmd('resize 15')
+  local win = vim.api.nvim_get_current_win()
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_win_set_buf(win, buf)
+  last_test_win = win
+  vim.fn.termopen({ 'bash', '-lc', last_test_cmd }, { cwd = root })
+  vim.cmd('startinsert')
+end, { desc = 'Maven: repeat last test' })
+
+-- Quit last test terminal
+keymap('n', '<leader>tq', function()
+  if last_test_win and vim.api.nvim_win_is_valid(last_test_win) then
+    pcall(vim.api.nvim_win_close, last_test_win, true)
+    last_test_win = nil
+  else
+    -- Try to close current window if it is a terminal
+    local bt = vim.bo.buftype
+    if bt == 'terminal' then
+      pcall(vim.cmd, 'q')
+    else
+      vim.notify('No test terminal to close', vim.log.levels.INFO)
+    end
+  end
+end, { desc = 'Maven: close test terminal' })
 keymap('n', '<leader>fg', function()
   require('telescope.builtin').live_grep({
     additional_args = function()
@@ -464,20 +423,25 @@ keymap('n', '<leader>fb', '<cmd>Telescope buffers<cr>', { desc = 'Find buffers' 
 keymap('n', '<leader>fG', '<cmd>Telescope live_grep<cr>', { desc = 'Live grep (regex)' })
 keymap('n', '<leader>fh', '<cmd>Telescope help_tags<cr>', { desc = 'Help tags' })
 
+-- Cheatsheet
+vim.api.nvim_create_user_command('Cheatsheet', function() require('cheatsheet').show() end, {})
+keymap('n', '<leader>?', function() require('cheatsheet').show() end, { desc = 'Show cheatsheet' })
+
 -- LSP
-keymap('n', 'gd', vim.lsp.buf.definition, { desc = 'Go to definition' })
+keymap('n', 'gd', function() require('lsp.handlers').goto_definition() end, { desc = 'Go to definition (smart)' })
 keymap('n', 'K', vim.lsp.buf.hover, { desc = 'Hover documentation' })
-keymap('n', 'gi', vim.lsp.buf.implementation, { desc = 'Go to implementation' })
+keymap('n', 'gi', function() require('lsp.handlers').goto_implementation() end, { desc = 'Go to implementation (smart)' })
 keymap('n', '<C-k>', vim.lsp.buf.signature_help, { desc = 'Signature help' })
 keymap('n', '<leader>wa', vim.lsp.buf.add_workspace_folder, { desc = 'Add workspace folder' })
 keymap('n', '<leader>wr', vim.lsp.buf.remove_workspace_folder, { desc = 'Remove workspace folder' })
 keymap('n', '<leader>wl', function()
   print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
 end, { desc = 'List workspace folders' })
-keymap('n', '<leader>D', vim.lsp.buf.type_definition, { desc = 'Type definition' })
+keymap('n', '<leader>D', function() require('lsp.handlers').goto_type_definition() end, { desc = 'Type definition (smart)' })
+keymap('n', 'gD', function() require('lsp.handlers').goto_declaration() end, { desc = 'Go to declaration (smart)' })
 keymap('n', '<leader>rn', vim.lsp.buf.rename, { desc = 'Rename' })
 keymap('n', '<leader>ca', vim.lsp.buf.code_action, { desc = 'Code action' })
-keymap('n', 'gr', vim.lsp.buf.references, { desc = 'References' })
+keymap('n', 'gr', function() require('lsp.handlers').goto_references() end, { desc = 'References (smart, quickfix if many)' })
 keymap('n', '<leader>f', function()
   vim.lsp.buf.format { async = true }
 end, { desc = 'Format' })
@@ -498,8 +462,23 @@ keymap('n', '<leader>ww', function()
   if vim.bo[bufnr].filetype == 'java' then
     safe_java_format(bufnr)
   end
-  vim.cmd('silent keepalt keepjumps noautocmd update')
-end, { desc = 'Save file (Java: format then save)' })
+  -- Force write (!), only for normal file buffers with a filename
+  if vim.bo[bufnr].buftype == '' then
+    local name = vim.api.nvim_buf_get_name(bufnr)
+    if name and name ~= '' then
+      local ok, err = pcall(function()
+        vim.cmd('silent keepalt keepjumps noautocmd write!')
+      end)
+      if not ok then
+        vim.notify('Save (!w) failed: ' .. tostring(err), vim.log.levels.WARN)
+      end
+    else
+      vim.notify('No filename; cannot perform write!.', vim.log.levels.INFO)
+    end
+  else
+    vim.notify('Not a normal file buffer; skipping write!.', vim.log.levels.INFO)
+  end
+end, { desc = 'Save file (!) (Java formats first)' })
 
 keymap('n', '<leader>q', ':q<CR>', { desc = 'Quit' })
 -- Quit current without saving: <leader>qq

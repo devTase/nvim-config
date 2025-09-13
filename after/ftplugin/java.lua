@@ -213,15 +213,15 @@ local config = {
     -- default: disabled to prevent accidental buffer loss
     vim.b.java_format_on_save = false
 
-    vim.api.nvim_create_user_command('JavaFormatOnSaveEnable', function()
+    vim.api.nvim_buf_create_user_command(bufnr, 'JavaFormatOnSaveEnable', function()
       vim.b.java_format_on_save = true
       vim.notify("Format-on-save Java: ON")
-    end, { buffer = bufnr })
+    end, {})
 
-    vim.api.nvim_create_user_command('JavaFormatOnSaveDisable', function()
+    vim.api.nvim_buf_create_user_command(bufnr, 'JavaFormatOnSaveDisable', function()
       vim.b.java_format_on_save = false
       vim.notify("Format-on-save Java: OFF")
-    end, { buffer = bufnr })
+    end, {})
 
     vim.api.nvim_create_autocmd("BufWritePre", {
       buffer = bufnr,
