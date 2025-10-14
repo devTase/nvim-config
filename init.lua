@@ -1,8 +1,13 @@
+require('python_provider')
+
+-- Disable Perl provider
+vim.g.loaded_perl_provider = 0
+
 -- Basic settings
 vim.opt.number = true
 vim.opt.encoding = 'utf-8'
 vim.opt.fileencoding = 'utf-8'
-vim.opt.relativenumber = false
+vim.opt.relativenumber = true
 vim.opt.cursorline = true
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
@@ -44,8 +49,6 @@ require("lazy").setup({
   { import = "plugins" },
 })
 
-require('theme')
-
 -- Mason setup
 require('mason').setup({
   ui = {
@@ -58,35 +61,7 @@ require('mason').setup({
 })
 
 require('mason-lspconfig').setup({
-  ensure_installed = { 'jdtls', 'clangd', 'lua_ls', 'pyright' },
-})
-
--- LSP configuration
-local lspconfig = require('lspconfig')
-local cmp_nvim_lsp = require('cmp_nvim_lsp')
-require('lsp.handlers').setup()
-
--- Add additional capabilities supported by nvim-cmp
-local capabilities = cmp_nvim_lsp.default_capabilities()
-
--- Java LSP setup (will be overridden by nvim-jdtls)
-lspconfig.jdtls.setup({
-  capabilities = capabilities,
-})
-
--- C/C++ LSP setup
-lspconfig.clangd.setup({
-  capabilities = capabilities,
-})
-
--- Lua LSP setup
-lspconfig.lua_ls.setup({
-  capabilities = capabilities,
-})
-
--- Python LSP setup
-lspconfig.pyright.setup({
-  capabilities = capabilities,
+  ensure_installed = { 'clangd', 'lua_ls', 'pyright' },
 })
 
 -- Completion setup
@@ -124,14 +99,18 @@ cmp.setup({
       end
     end, { 'i', 's' }),
   }),
-  sources = cmp.config.sources({
-    { name = 'copilot' },
-    { name = 'nvim_lsp' },
-    { name = 'luasnip' },
-  }, {
-    { name = 'buffer' },
-  })
+    sources = 
+      cmp.config.sources(
+          {
+              { name = 'nvim_lsp' },
+              { name = 'luasnip' },
+          }, 
+            {
+                { name = 'buffer' }})
 })
+
+-- Silence specific noisy LSP notifications (e.g., jdtls resolveMainClass during previews)
+pcall(require, 'user.quiet_lsp')
 
 -- Treesitter configuration
 require('nvim-treesitter.configs').setup({
@@ -142,65 +121,6 @@ require('nvim-treesitter.configs').setup({
     enable = true,
     additional_vim_regex_highlighting = false,
   },
-})
-
--- Nvim-tree setup
-require('nvim-tree').setup({
-  on_attach = function(bufnr)
-    local api = require('nvim-tree.api')
-    -- load default mappings
-    api.config.mappings.default_on_attach(bufnr)
-    -- ensure v/s open splits instead of entering Visual mode
-    local base = { buffer = bufnr, noremap = true, silent = true, nowait = true }
-    vim.keymap.set('n', 'o', api.node.open.edit,      vim.tbl_extend('force', base, { desc = 'Open: Edit' }))
-    vim.keymap.set('n', 'v', api.node.open.vertical,   vim.tbl_extend('force', base, { desc = 'Open: Vertical Split' }))
-    vim.keymap.set('n', 's', api.node.open.horizontal, vim.tbl_extend('force', base, { desc = 'Open: Horizontal Split' }))
-  end,
-  disable_netrw = true,
-  hijack_netrw = true,
-  open_on_tab = false,
-  hijack_cursor = false,
-  update_cwd = true,
-  diagnostics = {
-    enable = false,
-  },
-  update_focused_file = {
-    enable = true,
-    update_cwd = true,
-    ignore_list = {}
-  },
-  system_open = {
-    cmd = nil,
-    args = {}
-  },
-  filters = {
-    dotfiles = false,
-    custom = {}
-  },
-  git = {
-    enable = true,
-    ignore = true,
-    timeout = 500,
-  },
-  view = {
-    width = 40,
-    side = 'left',
-    preserve_window_proportions = false,
-    number = false,
-    relativenumber = false,
-    signcolumn = "yes"
-  },
-  actions = {
-    open_file = {
-      quit_on_open = false,
-      resize_window = true,
-      window_picker = { enable = false },
-    },
-  },
-  trash = {
-    cmd = "trash",
-    require_confirm = true
-  }
 })
 
 -- Harpoon setup
@@ -306,46 +226,10 @@ local keymap = vim.keymap.set
 -- File explorer
 keymap('n', '<leader>e', ':NvimTreeToggle<CR>', { desc = 'Toggle file explorer' })
 
--- Auto-fit NvimTree width to content
-local function nvim_tree_auto_width(opts)
-  opts = opts or {}
-  local min_w = opts.min_width or 35
-  local max_w = opts.max_width or 80
-  local padding = opts.padding or 4
-  local ok_api, api = pcall(require, 'nvim-tree.api')
-  local ok_view, view = pcall(require, 'nvim-tree.view')
-  if not (ok_api and ok_view) then return end
-  local winnr = view.get_winnr()
-  if not winnr or winnr == 0 then return end
-  local bufnr = vim.api.nvim_win_get_buf(winnr)
-  if vim.bo[bufnr].filetype ~= 'NvimTree' then return end
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-  local longest = 0
-  for _, l in ipairs(lines) do
-    local w = vim.fn.strdisplaywidth(l)
-    if w > longest then longest = w end
-  end
-  local desired = math.min(math.max(longest + padding, min_w), max_w)
-  pcall(api.tree.resize, desired)
-end
-
--- Auto-adjust on open/enter
-vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter' }, {
-  callback = function()
-    local ft = vim.bo.filetype
-    if ft == 'NvimTree' then
-      nvim_tree_auto_width({ min_width = 35, max_width = 90, padding = 4 })
-    end
-  end,
-})
-
--- Manual auto-fit
-keymap('n', '<leader>tw', function()
-  nvim_tree_auto_width({ min_width = 35, max_width = 90, padding = 4 })
-end, { desc = 'NvimTree: auto-fit width to content' })
-
--- Telescope
-keymap('n', '<leader>ff', '<cmd>Telescope find_files<cr>', { desc = 'Find files' })
+-- File finding with fzf-lua (mais estável)
+keymap('n', '<leader>ff', function()
+  require('fzf-lua').files()
+end, { desc = 'Find files (fzf)' })
 
 -- Maven tests
 keymap('n', '<leader>tt', function()
@@ -428,9 +312,39 @@ vim.api.nvim_create_user_command('Cheatsheet', function() require('cheatsheet').
 keymap('n', '<leader>?', function() require('cheatsheet').show() end, { desc = 'Show cheatsheet' })
 
 -- LSP
-keymap('n', 'gd', function() require('lsp.handlers').goto_definition() end, { desc = 'Go to definition (smart)' })
+keymap('n', 'gd', function()
+  local function supports(m)
+    for _, c in pairs(vim.lsp.get_clients({ bufnr = 0 })) do
+      if c.supports_method and c:supports_method(m) then return true end
+    end
+    return false
+  end
+  if not supports('textDocument/definition') and vim.bo.filetype == 'java' then
+    pcall(function() require('user.jdtls_util').ensure_started() end)
+  end
+  if supports('textDocument/definition') then
+    require('telescope.builtin').lsp_definitions()
+  else
+    vim.notify('No LSP with definitions for this buffer', vim.log.levels.INFO)
+  end
+end, { desc = 'Definition (Telescope)' })
 keymap('n', 'K', vim.lsp.buf.hover, { desc = 'Hover documentation' })
-keymap('n', 'gi', function() require('lsp.handlers').goto_implementation() end, { desc = 'Go to implementation (smart)' })
+keymap('n', 'gi', function()
+  local function supports(m)
+    for _, c in pairs(vim.lsp.get_clients({ bufnr = 0 })) do
+      if c.supports_method and c:supports_method(m) then return true end
+    end
+    return false
+  end
+  if not supports('textDocument/implementation') and vim.bo.filetype == 'java' then
+    pcall(function() require('user.jdtls_util').ensure_started() end)
+  end
+  if supports('textDocument/implementation') then
+    require('telescope.builtin').lsp_implementations()
+  else
+    vim.notify('No LSP with implementations for this buffer', vim.log.levels.INFO)
+  end
+end, { desc = 'Implementation (Telescope)' })
 keymap('n', '<C-k>', vim.lsp.buf.signature_help, { desc = 'Signature help' })
 keymap('n', '<leader>wa', vim.lsp.buf.add_workspace_folder, { desc = 'Add workspace folder' })
 keymap('n', '<leader>wr', vim.lsp.buf.remove_workspace_folder, { desc = 'Remove workspace folder' })
@@ -438,10 +352,41 @@ keymap('n', '<leader>wl', function()
   print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
 end, { desc = 'List workspace folders' })
 keymap('n', '<leader>D', function() require('lsp.handlers').goto_type_definition() end, { desc = 'Type definition (smart)' })
+keymap('n', 'gt', function()
+  local function supports(m)
+    for _, c in pairs(vim.lsp.get_clients({ bufnr = 0 })) do
+      if c.supports_method and c:supports_method(m) then return true end
+    end
+    return false
+  end
+  if not supports('textDocument/typeDefinition') and vim.bo.filetype == 'java' then
+    pcall(function() require('user.jdtls_util').ensure_started() end)
+  end
+  if supports('textDocument/typeDefinition') then
+    require('telescope.builtin').lsp_type_definitions()
+  else
+    vim.notify('No LSP with typeDefinition for this buffer', vim.log.levels.INFO)
+  end
+end, { desc = 'Type definition (Telescope)' })
 keymap('n', 'gD', function() require('lsp.handlers').goto_declaration() end, { desc = 'Go to declaration (smart)' })
 keymap('n', '<leader>rn', vim.lsp.buf.rename, { desc = 'Rename' })
 keymap('n', '<leader>ca', vim.lsp.buf.code_action, { desc = 'Code action' })
-keymap('n', 'gr', function() require('lsp.handlers').goto_references() end, { desc = 'References (smart, quickfix if many)' })
+keymap('n', 'gr', function()
+  local function supports(m)
+    for _, c in pairs(vim.lsp.get_clients({ bufnr = 0 })) do
+      if c.supports_method and c:supports_method(m) then return true end
+    end
+    return false
+  end
+  if not supports('textDocument/references') and vim.bo.filetype == 'java' then
+    pcall(function() require('user.jdtls_util').ensure_started() end)
+  end
+  if supports('textDocument/references') then
+    require('telescope.builtin').lsp_references()
+  else
+    vim.notify('No LSP with references for this buffer', vim.log.levels.INFO)
+  end
+end, { desc = 'References (Telescope)' })
 keymap('n', '<leader>f', function()
   vim.lsp.buf.format { async = true }
 end, { desc = 'Format' })
@@ -551,11 +496,5 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.keymap.set('v', '<leader>jm', '<Esc><Cmd>lua require("jdtls").extract_method(true)<CR>', { desc = 'Extract method', buffer = true })
   end,
 })
+vim.o.termguicolors = true
 
--- Auto-format on save for Java files (handled by ftplugin/java.lua)
--- vim.api.nvim_create_autocmd("BufWritePre", {
---   pattern = "*.java",
---   callback = function()
---     vim.lsp.buf.format({ async = false })
---   end,
--- })
