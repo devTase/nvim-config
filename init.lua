@@ -31,6 +31,29 @@ vim.opt.backupcopy = 'yes' -- safer writes when tools/watchers touch files
 vim.opt.hidden = true -- Allow hidden buffers
 vim.opt.switchbuf = 'useopen,usetab' -- Smarter buffer switching
 
+-- Enable debug logging
+vim.opt.verbose = 1
+
+-- Debug autocommands para eventos de janela
+local debug_group = vim.api.nvim_create_augroup('DebugWindowEvents', { clear = true })
+vim.api.nvim_create_autocmd('WinEnter', {
+  group = debug_group,
+  callback = function()
+    local win_info = vim.fn.winlayout()
+    vim.notify("WinEnter - Layout: " .. vim.inspect(win_info), vim.log.levels.DEBUG)
+    vim.notify("WinEnter - Total windows: " .. vim.fn.winnr('$'), vim.log.levels.DEBUG)
+  end
+})
+
+vim.api.nvim_create_autocmd('BufEnter', {
+  group = debug_group,
+  callback = function()
+    local buf_name = vim.api.nvim_buf_get_name(0)
+    local win_count = vim.fn.winnr('$')
+    vim.notify("BufEnter - Buffer: " .. buf_name .. ", Windows: " .. win_count, vim.log.levels.DEBUG)
+  end
+})
+
 -- Set leader key
 vim.g.mapleader = " "
 
@@ -230,24 +253,13 @@ local keymap = vim.keymap.set
 -- File explorer
 keymap('n', '<leader>e', ':NvimTreeToggle<CR>', { desc = 'Toggle file explorer' })
 
--- File finding with Telescope (com preview e recursos avançados)
+-- File finding with fzf-lua (estável e sem erros de espaço)
 keymap('n', '<leader>ff', function()
-  -- Check minimum terminal size
-  if vim.o.columns < 60 or vim.o.lines < 20 then
-    vim.notify('Terminal too small for Telescope (min: 60x20)', vim.log.levels.WARN)
-    return
-  end
-  
-  -- Force close NvimTree and any other floating windows
   vim.cmd('NvimTreeClose')
-  vim.cmd('cclose') -- Close quickfix if open
-  vim.cmd('lclose') -- Close location list if open
-  
-  -- Wait longer for everything to close
-  vim.defer_fn(function()
-    require('telescope.builtin').find_files()
-  end, 200)
-end, { desc = 'Find files (Telescope)' })
+  vim.notify("Closing NvimTree, terminal size: " .. vim.o.columns .. "x" .. vim.o.lines, vim.log.levels.DEBUG)
+  vim.notify("Opening fzf-lua files...", vim.log.levels.DEBUG)
+  require('fzf-lua').files()
+end, { desc = 'Find files (fzf-lua)' })
 
 -- Maven tests
 keymap('n', '<leader>tt', function()

@@ -1,143 +1,79 @@
 return {
-  -- FZF-lua como backup
+  -- FZF-lua - plugin único e estável
   {
     'ibhagwan/fzf-lua',
     dependencies = {
       'nvim-tree/nvim-web-devicons'
     },
     config = function()
+      vim.notify("Loading fzf-lua configuration...", vim.log.levels.DEBUG)
       require('fzf-lua').setup({
         winopts = {
-          height = 0.5,
-          width = 0.5,
+          height = 0.7,
+          width = 0.7,
+          row = 0.5,
+          col = 0.5,
+          border = 'rounded',
           preview = {
-            hidden = 'hidden'
+            hidden = 'hidden',
+            vertical = 'down:45%',
+            horizontal = 'right:60%'
           }
         },
         fzf_opts = {
-          ['--layout'] = 'reverse'
-        }
-      })
-    end
-  },
-
-  -- Telescope - plugin principal com preview e recursos avançados
-  {
-    'nvim-telescope/telescope.nvim',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'nvim-telescope/telescope-ui-select.nvim',
-    },
-    config = function()
-      require('telescope').setup({
-        defaults = {
-          layout_strategy = 'vertical',
-          layout_config = {
-            vertical = {
-              width = function()
-                -- Reduce width to ensure more space
-                local max_width = math.floor(vim.o.columns * 0.5)
-                return math.min(max_width, 60)
-              end,
-              height = function()
-                -- Reduce height to ensure more space
-                local max_height = math.floor(vim.o.lines * 0.6)
-                return math.min(max_height, 20)
-              end,
-              preview_cutoff = 0,
-              prompt_position = 'top',
-              mirror = false
-            }
-          },
-          sorting_strategy = 'ascending',
-          path_display = { 'truncate' },
-          preview = {
-            hide_on_startup = false,
-            filesize_limit = 2, -- MB
-            timeout = 200
-          },
-          results_title = false,
-          prompt_title = false,
-          borderchars = {
-            prompt = { '─', '│', ' ', '│', '┌', '┐', '│', '│' },
-            results = { '─', '│', '─', '│', '├', '┤', '┴', '┬' },
-            preview = { '─', '│', '─', '│', '┌', '┐', '┘', '└' },
-          }
+          ['--layout'] = 'reverse-list',
+          ['--info'] = 'inline-right',
+          ['--border'] = 'rounded'
         },
-        pickers = {
-          find_files = {
-            find_command = { 'fd', '--type', 'f', '--strip-cwd-prefix', '--hidden', '--follow', '--exclude', '.git', '--exclude', 'node_modules' },
-            previewer = true,
-            layout_config = {
-              vertical = {
-                width = function()
-                  local max_width = math.floor(vim.o.columns * 0.5)
-                  return math.min(max_width, 60)
-                end,
-                height = function()
-                  local max_height = math.floor(vim.o.lines * 0.6)
-                  return math.min(max_height, 20)
-                end,
-                preview_cutoff = 0,
-                prompt_position = 'top'
-              }
-            }
+        -- Configurações específicas para cada tipo de busca
+        files = {
+          cmd = 'fd',
+          file_icons = true,
+          color_icons = true,
+          git_status = true,
+          find_opts = '--type f --strip-cwd-prefix --hidden --follow --exclude .git --exclude node_modules'
+        },
+        -- Adicionar função para debugging
+        on_create = function()
+          vim.notify("fzf-lua window created successfully", vim.log.levels.DEBUG)
+        end,
+        grep = {
+          rg_opts = "--column --line-number --no-heading --color=always --smart-case --max-columns=4096 --hidden --glob '!{.git,node_modules}'",
+          git_icons = false,
+          file_icons = false
+        },
+        live_grep = {
+          rg_opts = "--column --line-number --no-heading --color=always --smart-case --max-columns=4096 --hidden --glob '!{.git,node_modules}'",
+          git_icons = false,
+          file_icons = false
+        },
+        buffers = {
+          sort_lastused = true,
+          show_all_buffers = true,
+          file_icons = true,
+          color_icons = true
+        },
+        help_tags = {
+          previewer = true
+        },
+        lsp = {
+          code_actions = {
+            previewer = 'codeaction_native'
           },
-          live_grep = {
-            additional_args = function()
-              return { '--hidden', '--glob', '!{.git,node_modules}' }
-            end,
-            previewer = true,
-            layout_config = {
-              vertical = {
-                width = function()
-                  local max_width = math.floor(vim.o.columns * 0.6)
-                  return math.min(max_width, 70)
-                end,
-                height = function()
-                  local max_height = math.floor(vim.o.lines * 0.6)
-                  return math.min(max_height, 20)
-                end,
-                preview_cutoff = 0,
-                prompt_position = 'top'
-              }
-            }
+          definitions = {
+            previewer = true
           },
-          buffers = {
-            previewer = true,
-            layout_config = {
-              vertical = {
-                width = function()
-                  local max_width = math.floor(vim.o.columns * 0.4)
-                  return math.min(max_width, 50)
-                end,
-                height = function()
-                  local max_height = math.floor(vim.o.lines * 0.5)
-                  return math.min(max_height, 15)
-                end,
-                preview_cutoff = 0,
-                prompt_position = 'top'
-              }
-            }
+          implementations = {
+            previewer = true  
           },
-          help_tags = {
+          type_definitions = {
+            previewer = true
+          },
+          references = {
             previewer = true
           }
-        },
-        extensions = {
-          ['ui-select'] = {
-            require('telescope.themes').get_dropdown({
-              layout_config = {
-                width = 0.5,
-                height = 0.3
-              }
-            })
-          }
         }
       })
-
-      -- Carregar extensões
-      require('telescope').load_extension('ui-select')
     end
   }
 }
