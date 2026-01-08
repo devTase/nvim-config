@@ -328,31 +328,25 @@ keymap('n', '<leader>tq', function()
 end, { desc = 'Maven: close test terminal' })
 keymap('n', '<leader>fg', function()
   vim.cmd('NvimTreeClose')
-  vim.defer_fn(function()
-    require('telescope.builtin').live_grep({
-      additional_args = function()
-        return { '--fixed-strings' }
-      end,
-    })
-  end, 100)
+  vim.notify("Opening fzf-lua live grep (literal)...", vim.log.levels.DEBUG)
+  require('fzf-lua').live_grep({
+    rg_opts = "--column --line-number --no-heading --color=always --smart-case --fixed-strings --max-columns=4096 --hidden --glob '!{.git,node_modules}'"
+  })
 end, { desc = 'Live grep (literal)' })
 keymap('n', '<leader>fb', function()
   vim.cmd('NvimTreeClose')
-  vim.defer_fn(function()
-    require('telescope.builtin').buffers()
-  end, 100)
+  vim.notify("Opening fzf-lua buffers...", vim.log.levels.DEBUG)
+  require('fzf-lua').buffers()
 end, { desc = 'Find buffers' })
 keymap('n', '<leader>fG', function()
   vim.cmd('NvimTreeClose')
-  vim.defer_fn(function()
-    require('telescope.builtin').live_grep()
-  end, 100)
+  vim.notify("Opening fzf-lua live grep (regex)...", vim.log.levels.DEBUG)
+  require('fzf-lua').live_grep()
 end, { desc = 'Live grep (regex)' })
 keymap('n', '<leader>fh', function()
   vim.cmd('NvimTreeClose')
-  vim.defer_fn(function()
-    require('telescope.builtin').help_tags()
-  end, 100)
+  vim.notify("Opening fzf-lua help tags...", vim.log.levels.DEBUG)
+  require('fzf-lua').help_tags()
 end, { desc = 'Help tags' })
 
 -- Cheatsheet
@@ -372,13 +366,12 @@ keymap('n', 'gd', function()
   end
   if supports('textDocument/definition') then
     vim.cmd('NvimTreeClose')
-    vim.defer_fn(function()
-      require('telescope.builtin').lsp_definitions()
-    end, 100)
+    vim.notify("Opening fzf-lua LSP definitions...", vim.log.levels.DEBUG)
+    require('fzf-lua').lsp_definitions()
   else
     vim.notify('No LSP with definitions for this buffer', vim.log.levels.INFO)
   end
-end, { desc = 'Definition (Telescope)' })
+end, { desc = 'Definition (fzf-lua)' })
 keymap('n', 'K', vim.lsp.buf.hover, { desc = 'Hover documentation' })
 keymap('n', 'gi', function()
   local function supports(m)
@@ -392,13 +385,12 @@ keymap('n', 'gi', function()
   end
   if supports('textDocument/implementation') then
     vim.cmd('NvimTreeClose')
-    vim.defer_fn(function()
-      require('telescope.builtin').lsp_implementations()
-    end, 100)
+    vim.notify("Opening fzf-lua LSP implementations...", vim.log.levels.DEBUG)
+    require('fzf-lua').lsp_implementations()
   else
     vim.notify('No LSP with implementations for this buffer', vim.log.levels.INFO)
   end
-end, { desc = 'Implementation (Telescope)' })
+end, { desc = 'Implementation (fzf-lua)' })
 keymap('n', '<C-k>', vim.lsp.buf.signature_help, { desc = 'Signature help' })
 keymap('n', '<leader>wa', vim.lsp.buf.add_workspace_folder, { desc = 'Add workspace folder' })
 keymap('n', '<leader>wr', vim.lsp.buf.remove_workspace_folder, { desc = 'Remove workspace folder' })
@@ -418,13 +410,12 @@ keymap('n', 'gt', function()
   end
   if supports('textDocument/typeDefinition') then
     vim.cmd('NvimTreeClose')
-    vim.defer_fn(function()
-      require('telescope.builtin').lsp_type_definitions()
-    end, 100)
+    vim.notify("Opening fzf-lua LSP type definitions...", vim.log.levels.DEBUG)
+    require('fzf-lua').lsp_type_definitions()
   else
     vim.notify('No LSP with typeDefinition for this buffer', vim.log.levels.INFO)
   end
-end, { desc = 'Type definition (Telescope)' })
+end, { desc = 'Type definition (fzf-lua)' })
 keymap('n', 'gD', function() require('lsp.handlers').goto_declaration() end, { desc = 'Go to declaration (smart)' })
 keymap('n', '<leader>rn', vim.lsp.buf.rename, { desc = 'Rename' })
 keymap('n', '<leader>ca', vim.lsp.buf.code_action, { desc = 'Code action' })
@@ -440,13 +431,12 @@ keymap('n', 'gr', function()
   end
   if supports('textDocument/references') then
     vim.cmd('NvimTreeClose')
-    vim.defer_fn(function()
-      require('telescope.builtin').lsp_references()
-    end, 100)
+    vim.notify("Opening fzf-lua LSP references...", vim.log.levels.DEBUG)
+    require('fzf-lua').lsp_references()
   else
     vim.notify('No LSP with references for this buffer', vim.log.levels.INFO)
   end
-end, { desc = 'References (Telescope)' })
+end, { desc = 'References (fzf-lua)' })
 keymap('n', '<leader>f', function()
   vim.lsp.buf.format { async = true }
 end, { desc = 'Format' })
