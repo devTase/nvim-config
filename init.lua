@@ -232,12 +232,12 @@ keymap('n', '<leader>e', ':NvimTreeToggle<CR>', { desc = 'Toggle file explorer' 
 
 -- File finding with Telescope (com preview e recursos avançados)
 keymap('n', '<leader>ff', function()
-  -- Close NvimTree if open
-  local api = require('nvim-tree.api')
-  if api.tree.is_visible() then
-    api.tree.close()
-  end
-  require('telescope.builtin').find_files()
+  -- Force close NvimTree if open
+  vim.cmd('NvimTreeClose')
+  -- Wait for tree to close completely
+  vim.defer_fn(function()
+    require('telescope.builtin').find_files()
+  end, 100)
 end, { desc = 'Find files (Telescope)' })
 
 -- Maven tests
@@ -306,40 +306,32 @@ keymap('n', '<leader>tq', function()
   end
 end, { desc = 'Maven: close test terminal' })
 keymap('n', '<leader>fg', function()
-  -- Close NvimTree if open
-  local api = require('nvim-tree.api')
-  if api.tree.is_visible() then
-    api.tree.close()
-  end
-  require('telescope.builtin').live_grep({
-    additional_args = function()
-      return { '--fixed-strings' }
-    end,
-  })
+  vim.cmd('NvimTreeClose')
+  vim.defer_fn(function()
+    require('telescope.builtin').live_grep({
+      additional_args = function()
+        return { '--fixed-strings' }
+      end,
+    })
+  end, 100)
 end, { desc = 'Live grep (literal)' })
 keymap('n', '<leader>fb', function()
-  -- Close NvimTree if open
-  local api = require('nvim-tree.api')
-  if api.tree.is_visible() then
-    api.tree.close()
-  end
-  require('telescope.builtin').buffers()
+  vim.cmd('NvimTreeClose')
+  vim.defer_fn(function()
+    require('telescope.builtin').buffers()
+  end, 100)
 end, { desc = 'Find buffers' })
 keymap('n', '<leader>fG', function()
-  -- Close NvimTree if open
-  local api = require('nvim-tree.api')
-  if api.tree.is_visible() then
-    api.tree.close()
-  end
-  require('telescope.builtin').live_grep()
+  vim.cmd('NvimTreeClose')
+  vim.defer_fn(function()
+    require('telescope.builtin').live_grep()
+  end, 100)
 end, { desc = 'Live grep (regex)' })
 keymap('n', '<leader>fh', function()
-  -- Close NvimTree if open
-  local api = require('nvim-tree.api')
-  if api.tree.is_visible() then
-    api.tree.close()
-  end
-  require('telescope.builtin').help_tags()
+  vim.cmd('NvimTreeClose')
+  vim.defer_fn(function()
+    require('telescope.builtin').help_tags()
+  end, 100)
 end, { desc = 'Help tags' })
 
 -- Cheatsheet
@@ -358,7 +350,10 @@ keymap('n', 'gd', function()
     pcall(function() require('user.jdtls_util').ensure_started() end)
   end
   if supports('textDocument/definition') then
-    require('telescope.builtin').lsp_definitions()
+    vim.cmd('NvimTreeClose')
+    vim.defer_fn(function()
+      require('telescope.builtin').lsp_definitions()
+    end, 100)
   else
     vim.notify('No LSP with definitions for this buffer', vim.log.levels.INFO)
   end
@@ -375,7 +370,10 @@ keymap('n', 'gi', function()
     pcall(function() require('user.jdtls_util').ensure_started() end)
   end
   if supports('textDocument/implementation') then
-    require('telescope.builtin').lsp_implementations()
+    vim.cmd('NvimTreeClose')
+    vim.defer_fn(function()
+      require('telescope.builtin').lsp_implementations()
+    end, 100)
   else
     vim.notify('No LSP with implementations for this buffer', vim.log.levels.INFO)
   end
@@ -398,7 +396,10 @@ keymap('n', 'gt', function()
     pcall(function() require('user.jdtls_util').ensure_started() end)
   end
   if supports('textDocument/typeDefinition') then
-    require('telescope.builtin').lsp_type_definitions()
+    vim.cmd('NvimTreeClose')
+    vim.defer_fn(function()
+      require('telescope.builtin').lsp_type_definitions()
+    end, 100)
   else
     vim.notify('No LSP with typeDefinition for this buffer', vim.log.levels.INFO)
   end
@@ -417,7 +418,10 @@ keymap('n', 'gr', function()
     pcall(function() require('user.jdtls_util').ensure_started() end)
   end
   if supports('textDocument/references') then
-    require('telescope.builtin').lsp_references()
+    vim.cmd('NvimTreeClose')
+    vim.defer_fn(function()
+      require('telescope.builtin').lsp_references()
+    end, 100)
   else
     vim.notify('No LSP with references for this buffer', vim.log.levels.INFO)
   end
