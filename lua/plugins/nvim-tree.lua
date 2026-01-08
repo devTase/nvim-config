@@ -66,7 +66,11 @@ return {
             end,
 
             view = {
-                width = 50,     -- largura do buffer
+                width = {
+                    min = 30,
+                    max = 50,
+                    padding = 1
+                },
             },
 
             actions = {

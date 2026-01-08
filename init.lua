@@ -27,6 +27,10 @@ vim.opt.updatetime = 50
 vim.opt.colorcolumn = "120"
 vim.opt.backupcopy = 'yes' -- safer writes when tools/watchers touch files
 
+-- Prevent window creation issues
+vim.opt.hidden = true -- Allow hidden buffers
+vim.opt.switchbuf = 'useopen,usetab' -- Smarter buffer switching
+
 -- Set leader key
 vim.g.mapleader = " "
 
@@ -226,10 +230,15 @@ local keymap = vim.keymap.set
 -- File explorer
 keymap('n', '<leader>e', ':NvimTreeToggle<CR>', { desc = 'Toggle file explorer' })
 
--- File finding with fzf-lua (mais estável)
+-- File finding with Telescope (com preview e recursos avançados)
 keymap('n', '<leader>ff', function()
-  require('fzf-lua').files()
-end, { desc = 'Find files (fzf)' })
+  -- Close NvimTree if open
+  local api = require('nvim-tree.api')
+  if api.tree.is_visible() then
+    api.tree.close()
+  end
+  require('telescope.builtin').find_files()
+end, { desc = 'Find files (Telescope)' })
 
 -- Maven tests
 keymap('n', '<leader>tt', function()
@@ -297,15 +306,41 @@ keymap('n', '<leader>tq', function()
   end
 end, { desc = 'Maven: close test terminal' })
 keymap('n', '<leader>fg', function()
+  -- Close NvimTree if open
+  local api = require('nvim-tree.api')
+  if api.tree.is_visible() then
+    api.tree.close()
+  end
   require('telescope.builtin').live_grep({
     additional_args = function()
       return { '--fixed-strings' }
     end,
   })
 end, { desc = 'Live grep (literal)' })
-keymap('n', '<leader>fb', '<cmd>Telescope buffers<cr>', { desc = 'Find buffers' })
-keymap('n', '<leader>fG', '<cmd>Telescope live_grep<cr>', { desc = 'Live grep (regex)' })
-keymap('n', '<leader>fh', '<cmd>Telescope help_tags<cr>', { desc = 'Help tags' })
+keymap('n', '<leader>fb', function()
+  -- Close NvimTree if open
+  local api = require('nvim-tree.api')
+  if api.tree.is_visible() then
+    api.tree.close()
+  end
+  require('telescope.builtin').buffers()
+end, { desc = 'Find buffers' })
+keymap('n', '<leader>fG', function()
+  -- Close NvimTree if open
+  local api = require('nvim-tree.api')
+  if api.tree.is_visible() then
+    api.tree.close()
+  end
+  require('telescope.builtin').live_grep()
+end, { desc = 'Live grep (regex)' })
+keymap('n', '<leader>fh', function()
+  -- Close NvimTree if open
+  local api = require('nvim-tree.api')
+  if api.tree.is_visible() then
+    api.tree.close()
+  end
+  require('telescope.builtin').help_tags()
+end, { desc = 'Help tags' })
 
 -- Cheatsheet
 vim.api.nvim_create_user_command('Cheatsheet', function() require('cheatsheet').show() end, {})
