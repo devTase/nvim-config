@@ -232,12 +232,21 @@ keymap('n', '<leader>e', ':NvimTreeToggle<CR>', { desc = 'Toggle file explorer' 
 
 -- File finding with Telescope (com preview e recursos avançados)
 keymap('n', '<leader>ff', function()
-  -- Force close NvimTree if open
+  -- Check minimum terminal size
+  if vim.o.columns < 60 or vim.o.lines < 20 then
+    vim.notify('Terminal too small for Telescope (min: 60x20)', vim.log.levels.WARN)
+    return
+  end
+  
+  -- Force close NvimTree and any other floating windows
   vim.cmd('NvimTreeClose')
-  -- Wait for tree to close completely
+  vim.cmd('cclose') -- Close quickfix if open
+  vim.cmd('lclose') -- Close location list if open
+  
+  -- Wait longer for everything to close
   vim.defer_fn(function()
     require('telescope.builtin').find_files()
-  end, 100)
+  end, 200)
 end, { desc = 'Find files (Telescope)' })
 
 -- Maven tests
