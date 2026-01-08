@@ -6,7 +6,6 @@ return {
       'nvim-tree/nvim-web-devicons'
     },
     config = function()
-      vim.notify("Loading fzf-lua configuration...", vim.log.levels.DEBUG)
       require('fzf-lua').setup({
         winopts = {
           height = 0.7,
@@ -33,10 +32,6 @@ return {
           git_status = true,
           find_opts = '--type f --strip-cwd-prefix --hidden --follow --exclude .git --exclude node_modules'
         },
-        -- Adicionar função para debugging
-        on_create = function()
-          vim.notify("fzf-lua window created successfully", vim.log.levels.DEBUG)
-        end,
         grep = {
           rg_opts = "--column --line-number --no-heading --color=always --smart-case --max-columns=4096 --hidden --glob '!{.git,node_modules}'",
           git_icons = false,

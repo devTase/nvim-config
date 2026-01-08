@@ -256,8 +256,6 @@ keymap('n', '<leader>e', ':NvimTreeToggle<CR>', { desc = 'Toggle file explorer' 
 -- File finding with fzf-lua (estável e sem erros de espaço)
 keymap('n', '<leader>ff', function()
   vim.cmd('NvimTreeClose')
-  vim.notify("Closing NvimTree, terminal size: " .. vim.o.columns .. "x" .. vim.o.lines, vim.log.levels.DEBUG)
-  vim.notify("Opening fzf-lua files...", vim.log.levels.DEBUG)
   require('fzf-lua').files()
 end, { desc = 'Find files (fzf-lua)' })
 
@@ -328,24 +326,20 @@ keymap('n', '<leader>tq', function()
 end, { desc = 'Maven: close test terminal' })
 keymap('n', '<leader>fg', function()
   vim.cmd('NvimTreeClose')
-  vim.notify("Opening fzf-lua live grep (literal)...", vim.log.levels.DEBUG)
   require('fzf-lua').live_grep({
     rg_opts = "--column --line-number --no-heading --color=always --smart-case --fixed-strings --max-columns=4096 --hidden --glob '!{.git,node_modules}'"
   })
 end, { desc = 'Live grep (literal)' })
 keymap('n', '<leader>fb', function()
   vim.cmd('NvimTreeClose')
-  vim.notify("Opening fzf-lua buffers...", vim.log.levels.DEBUG)
   require('fzf-lua').buffers()
 end, { desc = 'Find buffers' })
 keymap('n', '<leader>fG', function()
   vim.cmd('NvimTreeClose')
-  vim.notify("Opening fzf-lua live grep (regex)...", vim.log.levels.DEBUG)
   require('fzf-lua').live_grep()
 end, { desc = 'Live grep (regex)' })
 keymap('n', '<leader>fh', function()
   vim.cmd('NvimTreeClose')
-  vim.notify("Opening fzf-lua help tags...", vim.log.levels.DEBUG)
   require('fzf-lua').help_tags()
 end, { desc = 'Help tags' })
 
@@ -366,7 +360,6 @@ keymap('n', 'gd', function()
   end
   if supports('textDocument/definition') then
     vim.cmd('NvimTreeClose')
-    vim.notify("Opening fzf-lua LSP definitions...", vim.log.levels.DEBUG)
     require('fzf-lua').lsp_definitions()
   else
     vim.notify('No LSP with definitions for this buffer', vim.log.levels.INFO)
@@ -385,7 +378,6 @@ keymap('n', 'gi', function()
   end
   if supports('textDocument/implementation') then
     vim.cmd('NvimTreeClose')
-    vim.notify("Opening fzf-lua LSP implementations...", vim.log.levels.DEBUG)
     require('fzf-lua').lsp_implementations()
   else
     vim.notify('No LSP with implementations for this buffer', vim.log.levels.INFO)
@@ -410,7 +402,6 @@ keymap('n', 'gt', function()
   end
   if supports('textDocument/typeDefinition') then
     vim.cmd('NvimTreeClose')
-    vim.notify("Opening fzf-lua LSP type definitions...", vim.log.levels.DEBUG)
     require('fzf-lua').lsp_type_definitions()
   else
     vim.notify('No LSP with typeDefinition for this buffer', vim.log.levels.INFO)
@@ -431,7 +422,6 @@ keymap('n', 'gr', function()
   end
   if supports('textDocument/references') then
     vim.cmd('NvimTreeClose')
-    vim.notify("Opening fzf-lua LSP references...", vim.log.levels.DEBUG)
     require('fzf-lua').lsp_references()
   else
     vim.notify('No LSP with references for this buffer', vim.log.levels.INFO)
