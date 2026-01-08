@@ -31,28 +31,7 @@ vim.opt.backupcopy = 'yes' -- safer writes when tools/watchers touch files
 vim.opt.hidden = true -- Allow hidden buffers
 vim.opt.switchbuf = 'useopen,usetab' -- Smarter buffer switching
 
--- Enable debug logging
-vim.opt.verbose = 1
-
--- Debug autocommands para eventos de janela
-local debug_group = vim.api.nvim_create_augroup('DebugWindowEvents', { clear = true })
-vim.api.nvim_create_autocmd('WinEnter', {
-  group = debug_group,
-  callback = function()
-    local win_info = vim.fn.winlayout()
-    vim.notify("WinEnter - Layout: " .. vim.inspect(win_info), vim.log.levels.DEBUG)
-    vim.notify("WinEnter - Total windows: " .. vim.fn.winnr('$'), vim.log.levels.DEBUG)
-  end
-})
-
-vim.api.nvim_create_autocmd('BufEnter', {
-  group = debug_group,
-  callback = function()
-    local buf_name = vim.api.nvim_buf_get_name(0)
-    local win_count = vim.fn.winnr('$')
-    vim.notify("BufEnter - Buffer: " .. buf_name .. ", Windows: " .. win_count, vim.log.levels.DEBUG)
-  end
-})
+-- Debug logging removido
 
 -- Set leader key
 vim.g.mapleader = " "

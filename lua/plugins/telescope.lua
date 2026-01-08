@@ -14,8 +14,8 @@ return {
           col = 0.5,
           border = 'rounded',
           preview = {
-            hidden = 'hidden',
-            vertical = 'down:45%',
+            hidden = false,
+            vertical = 'down:50%',
             horizontal = 'right:60%'
           }
         },
@@ -30,7 +30,8 @@ return {
           file_icons = true,
           color_icons = true,
           git_status = true,
-          find_opts = '--type f --strip-cwd-prefix --hidden --follow --exclude .git --exclude node_modules'
+          find_opts = '--type f --strip-cwd-prefix --hidden --follow --exclude .git --exclude node_modules',
+          previewer = true
         },
         grep = {
           rg_opts = "--column --line-number --no-heading --color=always --smart-case --max-columns=4096 --hidden --glob '!{.git,node_modules}'",
