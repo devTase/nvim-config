@@ -17,7 +17,7 @@ local function detect_java_runtimes()
       end
     end
   end
-  if vim.loop.os_uname().sysname == 'Darwin' then
+  if vim.uv.os_uname().sysname == 'Darwin' then
     add('17', 'JavaSE-17')
     add('11', 'JavaSE-11')
   end
@@ -118,7 +118,7 @@ local config = {
   -- On attach function
   on_attach = function(client, bufnr)
     -- Enable completion triggered by <c-x><c-o>
-    vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+    vim.bo[bufnr].omnifunc = 'v:lua.vim.lsp.omnifunc'
 
     -- Mappings
     local bufopts = { noremap=true, silent=true, buffer=bufnr }

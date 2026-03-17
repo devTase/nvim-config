@@ -38,7 +38,7 @@ vim.g.mapleader = " "
 
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
   vim.fn.system({
     "git",
     "clone",
@@ -55,79 +55,8 @@ require("lazy").setup({
   { import = "plugins" },
 })
 
--- Mason setup
-require('mason').setup({
-  ui = {
-    icons = {
-      package_installed = "✓",
-      package_pending = "➜",
-      package_uninstalled = "✗"
-    }
-  }
-})
-
-require('mason-lspconfig').setup({
-  ensure_installed = { 'clangd', 'lua_ls', 'pyright' },
-})
-
--- Completion setup
-local cmp = require('cmp')
-local luasnip = require('luasnip')
-
-cmp.setup({
-  snippet = {
-    expand = function(args)
-      luasnip.lsp_expand(args.body)
-    end,
-  },
-  mapping = cmp.mapping.preset.insert({
-    ['<C-d>'] = cmp.mapping.scroll_docs(-4),
-    ['<C-f>'] = cmp.mapping.scroll_docs(4),
-    ['<C-Space>'] = cmp.mapping.complete(),
-    ['<C-e>'] = cmp.mapping.abort(),
-    ['<CR>'] = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true }),
-    ['<Tab>'] = cmp.mapping(function(fallback)
-      if cmp.visible() then
-        cmp.select_next_item()
-      elseif luasnip.expand_or_jumpable() then
-        luasnip.expand_or_jump()
-      else
-        fallback()
-      end
-    end, { 'i', 's' }),
-    ['<S-Tab>'] = cmp.mapping(function(fallback)
-      if cmp.visible() then
-        cmp.select_prev_item()
-      elseif luasnip.jumpable(-1) then
-        luasnip.jump(-1)
-      else
-        fallback()
-      end
-    end, { 'i', 's' }),
-  }),
-    sources = 
-      cmp.config.sources(
-          {
-              { name = 'nvim_lsp' },
-              { name = 'luasnip' },
-          }, 
-            {
-                { name = 'buffer' }})
-})
-
 -- Silence specific noisy LSP notifications (e.g., jdtls resolveMainClass during previews)
 pcall(require, 'user.quiet_lsp')
-
--- Treesitter configuration
-require('nvim-treesitter.configs').setup({
-  ensure_installed = { "c", "cpp", "java", "lua", "python", "json", "vim", "vimdoc", "query" },
-  sync_install = false,
-  auto_install = true,
-  highlight = {
-    enable = true,
-    additional_vim_regex_highlighting = false,
-  },
-})
 
 -- Harpoon setup
 local harpoon = require("harpoon")
@@ -368,7 +297,7 @@ keymap('n', '<leader>wr', vim.lsp.buf.remove_workspace_folder, { desc = 'Remove 
 keymap('n', '<leader>wl', function()
   print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
 end, { desc = 'List workspace folders' })
-keymap('n', '<leader>D', function() require('lsp.handlers').goto_type_definition() end, { desc = 'Type definition (smart)' })
+keymap('n', '<leader>D', vim.lsp.buf.type_definition, { desc = 'Type definition' })
 keymap('n', 'gt', function()
   local function supports(m)
     for _, c in pairs(vim.lsp.get_clients({ bufnr = 0 })) do
@@ -386,7 +315,7 @@ keymap('n', 'gt', function()
     vim.notify('No LSP with typeDefinition for this buffer', vim.log.levels.INFO)
   end
 end, { desc = 'Type definition (fzf-lua)' })
-keymap('n', 'gD', function() require('lsp.handlers').goto_declaration() end, { desc = 'Go to declaration (smart)' })
+keymap('n', 'gD', vim.lsp.buf.declaration, { desc = 'Go to declaration' })
 keymap('n', '<leader>rn', vim.lsp.buf.rename, { desc = 'Rename' })
 keymap('n', '<leader>ca', vim.lsp.buf.code_action, { desc = 'Code action' })
 keymap('n', 'gr', function()

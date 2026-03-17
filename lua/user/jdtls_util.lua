@@ -14,7 +14,7 @@ local function is_normal_java_buffer()
 end
 
 local function detect_platform_dir()
-  local uname = vim.loop.os_uname()
+  local uname = vim.uv.os_uname()
   local sys = uname.sysname
   local arch = uname.machine
   if sys == 'Darwin' then
@@ -45,15 +45,15 @@ local function build_config()
   -- Resolve a Java 21/17 runtime if available
   local function pick_java()
     local jh = os.getenv('JAVA_HOME')
-    if jh and #jh > 0 and vim.loop.fs_stat(jh .. '/bin/java') then
+    if jh and #jh > 0 and vim.uv.fs_stat(jh .. '/bin/java') then
       return jh .. '/bin/java'
     end
-    if vim.loop.os_uname().sysname == 'Darwin' then
+    if vim.uv.os_uname().sysname == 'Darwin' then
       local function jhome(ver)
         local out = vim.fn.system('/usr/libexec/java_home -v ' .. ver)
         if vim.v.shell_error == 0 then
           local p = vim.fn.trim(out)
-          if p ~= '' and vim.loop.fs_stat(p .. '/bin/java') then return p .. '/bin/java' end
+          if p ~= '' and vim.uv.fs_stat(p .. '/bin/java') then return p .. '/bin/java' end
         end
         return nil
       end
