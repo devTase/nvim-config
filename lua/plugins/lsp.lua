@@ -10,11 +10,10 @@ return {
       'b0o/schemastore.nvim',
     },
     config = function()
-      local lspconfig = require('lspconfig')
       local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
       -- Lua
-      lspconfig.lua_ls.setup({
+      vim.lsp.config.lua_ls = {
         capabilities = capabilities,
         settings = {
           Lua = {
@@ -23,19 +22,19 @@ return {
             telemetry = { enable = false },
           },
         },
-      })
+      }
 
       -- Python
-      lspconfig.pyright.setup({ capabilities = capabilities })
+      vim.lsp.config.pyright = { capabilities = capabilities }
 
       -- C/C++
-      lspconfig.clangd.setup({ capabilities = capabilities })
+      vim.lsp.config.clangd = { capabilities = capabilities }
 
       -- Markdown
-      lspconfig.marksman.setup({ capabilities = capabilities })
+      vim.lsp.config.marksman = { capabilities = capabilities }
 
       -- YAML
-      lspconfig.yamlls.setup({
+      vim.lsp.config.yamlls = {
         capabilities = capabilities,
         settings = {
           yaml = {
@@ -49,10 +48,10 @@ return {
             hover = true,
           },
         },
-      })
+      }
 
       -- JSON
-      lspconfig.jsonls.setup({
+      vim.lsp.config.jsonls = {
         capabilities = capabilities,
         settings = {
           json = {
@@ -60,7 +59,9 @@ return {
             validate = { enable = true },
           },
         },
-      })
+      }
+
+      vim.lsp.enable({ 'lua_ls', 'pyright', 'clangd', 'marksman', 'yamlls', 'jsonls' })
     end,
   },
 
