@@ -63,6 +63,50 @@ return {
     },
     config = function(_, opts)
       require('nvim-treesitter.configs').setup(opts)
+
+      -- HACK: Neovim 0.12 changed captures to TSNode[] (lists) but
+      -- nvim-treesitter query_predicates still expect single nodes.
+      -- Re-register the affected directives with a first-node unwrap.
+      -- Remove this block once nvim-treesitter ships a fix upstream.
+      if vim.fn.has('nvim-0.12') == 1 then
+        local query = require('vim.treesitter.query')
+        local force = { force = true }
+
+        local function first(val)
+          return type(val) == 'table' and not val.range and val[1] or val
+        end
+
+        query.add_directive('set-lang-from-info-string!', function(match, _, bufnr, pred, metadata)
+          local node = first(match[pred[2]])
+          if not node then return end
+          local alias = vim.treesitter.get_node_text(node, bufnr):lower()
+          local ft = vim.filetype.match({ filename = 'a.' .. alias })
+          metadata['injection.language'] = ft or alias
+        end, force)
+
+        query.add_directive('set-lang-from-mimetype!', function(match, _, bufnr, pred, metadata)
+          local node = first(match[pred[2]])
+          if not node then return end
+          local mime = vim.treesitter.get_node_text(node, bufnr)
+          local langs = { ['importmap']='json', ['module']='javascript',
+            ['application/ecmascript']='javascript', ['text/ecmascript']='javascript' }
+          if langs[mime] then
+            metadata['injection.language'] = langs[mime]
+          else
+            local parts = vim.split(mime, '/', {})
+            metadata['injection.language'] = parts[#parts]
+          end
+        end, force)
+
+        query.add_directive('downcase!', function(match, _, bufnr, pred, metadata)
+          local id = pred[2]
+          local node = first(match[id])
+          if not node then return end
+          local text = vim.treesitter.get_node_text(node, bufnr, { metadata = metadata[id] }) or ''
+          if not metadata[id] then metadata[id] = {} end
+          metadata[id].text = text:lower()
+        end, force)
+      end
     end,
   },
 }

@@ -41,6 +41,17 @@ local function build_config()
   pcall(function()
     capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
   end)
+  -- Enable LSP file operations (willRename) for refactoring on move
+  capabilities.workspace = capabilities.workspace or {}
+  capabilities.workspace.fileOperations = {
+    dynamicRegistration = false,
+    didCreate = true,
+    willCreate = true,
+    didRename = true,
+    willRename = true,
+    didDelete = true,
+    willDelete = true,
+  }
 
   -- Resolve a Java 21/17 runtime if available
   local function pick_java()

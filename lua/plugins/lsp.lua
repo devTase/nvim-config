@@ -11,6 +11,17 @@ return {
     },
     config = function()
       local capabilities = require('cmp_nvim_lsp').default_capabilities()
+      -- Enable LSP file operations (willRename) for refactoring on move
+      capabilities.workspace = capabilities.workspace or {}
+      capabilities.workspace.fileOperations = {
+        dynamicRegistration = false,
+        didCreate = true,
+        willCreate = true,
+        didRename = true,
+        willRename = true,
+        didDelete = true,
+        willDelete = true,
+      }
 
       -- Lua
       vim.lsp.config.lua_ls = {
@@ -70,6 +81,8 @@ return {
     'antosha417/nvim-lsp-file-operations',
     dependencies = { 'nvim-lua/plenary.nvim', 'nvim-tree/nvim-tree.lua' },
     config = function()
+      -- Fix deprecated API for Neovim 0.12+ (plugin uses get_active_clients)
+      vim.lsp.get_active_clients = vim.lsp.get_clients
       require('lsp-file-operations').setup()
     end,
   },

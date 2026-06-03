@@ -158,14 +158,43 @@ end
 -- Key mappings
 local keymap = vim.keymap.set
 
--- File explorer
-keymap('n', '<leader>e', ':NvimTreeToggle<CR>', { desc = 'Toggle file explorer' })
+-- Primeagen: netrw file explorer
+keymap('n', '<leader>pv', vim.cmd.Ex, { desc = 'Open netrw (Primeagen style)' })
 
--- File finding with fzf-lua (estável e sem erros de espaço)
-keymap('n', '<leader>ff', function()
-  vim.cmd('NvimTreeClose')
-  require('fzf-lua').files()
-end, { desc = 'Find files (fzf-lua)' })
+-- Primeagen: move selected lines up/down in visual mode
+keymap('v', 'J', ":m '>+1<CR>gv=gv", { desc = 'Move selection down' })
+keymap('v', 'K', ":m '<-2<CR>gv=gv", { desc = 'Move selection up' })
+
+-- Primeagen: J keeps cursor in place
+keymap('n', 'J', 'mzJ`z', { desc = 'Join line (cursor stays)' })
+
+-- Primeagen: centered scroll and search navigation
+keymap('n', '<C-d>', '<C-d>zz', { desc = 'Scroll down (centered)' })
+keymap('n', '<C-u>', '<C-u>zz', { desc = 'Scroll up (centered)' })
+keymap('n', 'n', 'nzzzv', { desc = 'Next search (centered)' })
+keymap('n', 'N', 'Nzzzv', { desc = 'Prev search (centered)' })
+
+-- Primeagen: paste over selection without losing register
+keymap('x', '<leader>p', [["_dP]], { desc = 'Paste without losing register' })
+
+-- Primeagen: yank to system clipboard
+keymap({ 'n', 'v' }, '<leader>y', [["+y]], { desc = 'Yank to clipboard' })
+keymap('n', '<leader>Y', [["+Y]], { desc = 'Yank line to clipboard' })
+
+-- Primeagen: delete to void register
+keymap({ 'n', 'v' }, '<leader>d', [["_d]], { desc = 'Delete to void register' })
+
+-- Primeagen: disable Q (accidental Ex mode)
+keymap('n', 'Q', '<nop>', { desc = 'Disabled' })
+
+-- Primeagen: quick search and replace word under cursor
+keymap('n', '<leader>s', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { desc = 'Search & replace word' })
+
+-- Primeagen: make file executable
+keymap('n', '<leader>x', '<cmd>!chmod +x %<CR>', { silent = true, desc = 'Make file executable' })
+
+
+-- LSP
 
 -- Maven tests
 keymap('n', '<leader>tt', function()
@@ -232,26 +261,8 @@ keymap('n', '<leader>tq', function()
     end
   end
 end, { desc = 'Maven: close test terminal' })
-keymap('n', '<leader>fg', function()
-  vim.cmd('NvimTreeClose')
-  require('fzf-lua').live_grep({
-    rg_opts = "--column --line-number --no-heading --color=always --smart-case --fixed-strings --max-columns=4096 --hidden --glob '!{.git,node_modules}'"
-  })
-end, { desc = 'Live grep (literal)' })
-keymap('n', '<leader>fb', function()
-  vim.cmd('NvimTreeClose')
-  require('fzf-lua').buffers()
-end, { desc = 'Find buffers' })
-keymap('n', '<leader>fG', function()
-  vim.cmd('NvimTreeClose')
-  require('fzf-lua').live_grep()
-end, { desc = 'Live grep (regex)' })
-keymap('n', '<leader>fh', function()
-  vim.cmd('NvimTreeClose')
-  require('fzf-lua').help_tags()
-end, { desc = 'Help tags' })
 
--- Cheatsheet
+-- LSP
 vim.api.nvim_create_user_command('Cheatsheet', function() require('cheatsheet').show() end, {})
 keymap('n', '<leader>?', function() require('cheatsheet').show() end, { desc = 'Show cheatsheet' })
 
@@ -267,12 +278,11 @@ keymap('n', 'gd', function()
     pcall(function() require('user.jdtls_util').ensure_started() end)
   end
   if supports('textDocument/definition') then
-    vim.cmd('NvimTreeClose')
-    require('fzf-lua').lsp_definitions()
+    require('telescope.builtin').lsp_definitions()
   else
     vim.notify('No LSP with definitions for this buffer', vim.log.levels.INFO)
   end
-end, { desc = 'Definition (fzf-lua)' })
+end, { desc = 'Definition' })
 keymap('n', 'K', vim.lsp.buf.hover, { desc = 'Hover documentation' })
 keymap('n', 'gi', function()
   local function supports(m)
@@ -285,12 +295,11 @@ keymap('n', 'gi', function()
     pcall(function() require('user.jdtls_util').ensure_started() end)
   end
   if supports('textDocument/implementation') then
-    vim.cmd('NvimTreeClose')
-    require('fzf-lua').lsp_implementations()
+    require('telescope.builtin').lsp_implementations()
   else
     vim.notify('No LSP with implementations for this buffer', vim.log.levels.INFO)
   end
-end, { desc = 'Implementation (fzf-lua)' })
+end, { desc = 'Implementation' })
 keymap('n', '<C-k>', vim.lsp.buf.signature_help, { desc = 'Signature help' })
 keymap('n', '<leader>wa', vim.lsp.buf.add_workspace_folder, { desc = 'Add workspace folder' })
 keymap('n', '<leader>wr', vim.lsp.buf.remove_workspace_folder, { desc = 'Remove workspace folder' })
@@ -309,12 +318,11 @@ keymap('n', 'gt', function()
     pcall(function() require('user.jdtls_util').ensure_started() end)
   end
   if supports('textDocument/typeDefinition') then
-    vim.cmd('NvimTreeClose')
-    require('fzf-lua').lsp_type_definitions()
+    require('telescope.builtin').lsp_type_definitions()
   else
     vim.notify('No LSP with typeDefinition for this buffer', vim.log.levels.INFO)
   end
-end, { desc = 'Type definition (fzf-lua)' })
+end, { desc = 'Type definition' })
 keymap('n', 'gD', vim.lsp.buf.declaration, { desc = 'Go to declaration' })
 keymap('n', '<leader>rn', vim.lsp.buf.rename, { desc = 'Rename' })
 keymap('n', '<leader>ca', vim.lsp.buf.code_action, { desc = 'Code action' })
@@ -329,18 +337,17 @@ keymap('n', 'gr', function()
     pcall(function() require('user.jdtls_util').ensure_started() end)
   end
   if supports('textDocument/references') then
-    vim.cmd('NvimTreeClose')
-    require('fzf-lua').lsp_references()
+    require('telescope.builtin').lsp_references()
   else
     vim.notify('No LSP with references for this buffer', vim.log.levels.INFO)
   end
-end, { desc = 'References (fzf-lua)' })
-keymap('n', '<leader>f', function()
+end, { desc = 'References' })
+keymap('n', '<leader>lf', function()
   vim.lsp.buf.format { async = true }
 end, { desc = 'Format' })
 
 -- Diagnostics
-keymap('n', '<leader>d', vim.diagnostic.open_float, { desc = 'Open diagnostic float' })
+keymap('n', '<leader>vd', vim.diagnostic.open_float, { desc = 'Open diagnostic float' })
 keymap('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous diagnostic' })
 keymap('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic' })
 keymap('n', '<leader>ld', vim.diagnostic.setloclist, { desc = 'Diagnostics: set location list' })
@@ -376,7 +383,7 @@ end, { desc = 'Save file (!) (Java formats first)' })
 keymap('n', '<leader>q', ':q<CR>', { desc = 'Quit' })
 -- Quit current without saving: <leader>qq
 keymap('n', '<leader>qq', ':q!<CR>', { desc = 'Quit without saving' })
-keymap('n', '<leader>x', function()
+keymap('n', '<leader>xq', function()
   local bufnr = vim.api.nvim_get_current_buf()
   if vim.bo[bufnr].filetype == 'java' then
     safe_java_format(bufnr)
@@ -387,7 +394,7 @@ keymap('n', '<leader>x', function()
     end)
   end
   vim.cmd('q')
-end, { desc = 'Save (if modified) and quit (Java formats first)' })
+end, { desc = 'Save (if modified) and quit' })
 keymap('n', '<leader>qa', ':qa!<CR>', { desc = 'Quit all without saving' })
 keymap('n', '<leader>wq', function()
   -- 1) Format all loaded Java buffers safely
